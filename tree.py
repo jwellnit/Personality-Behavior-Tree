@@ -6,86 +6,100 @@ blackboard["refIdCount"] = 0;
 #node types
 class Node:
     def __init__(self, baseId = -1, refId = -1):
-        if (baseID == -1):
-            this.baseId = blackboard["baseIdCount"]
+        if (baseId == -1):
+            self.baseId = blackboard["baseIdCount"]
             blackboard["baseIdCount"] += 1
         else:
-            this.baseId = baseId
-        if not blackboard["baseId::"+this.baseId]:
-            blackboard["baseId::"+this.baseId] = {}
-        this.refId = refId
+            self.baseId = baseId
+        if not "baseId::"+str(self.baseId) in blackboard:
+            blackboard["baseId::"+str(self.baseId)] = {}
+        self.refId = refId
 
-    def referrence():
+    def referrence(self):
         refIdNew = blackboard["refIdCount"]
         blackboard["refIdCount"] += 1
-        ref = Node(this.baseId, refIdNew)
+        ref = Node(baseId = self.baseId, refId = refIdNew)
         return ref
 
-    def excute():
+    def excute(self):
         return "SUCCESS"
 
-class ActionNode(Node):
-    def __init__(self, baseId, refId, effects, preconditions, time = 1, effectText = "", involvedChars = [], consentingChars = []):
-        Node.__init__(baseId, refId)
-        this.effects = effects
-        this.preconditions = preconditions
-        this.time = time
-        this.effectText = effectText
-        this.involvedChars = involvedChars
-        this.consentingChars = consentingChars
+    def spec(self):
+        print("Base ID: " + str(self.baseId) + "\n")
+        print("Ref ID: " + str(self.refId) + "\n")
 
-    def referrence():
+
+
+class ActionNode(Node):
+    def __init__(self, effects, preconditions, baseId = -1, refId = -1, time = 1, effectText = "", involvedChars = [], consentingChars = []):
+        Node.__init__(self, baseId, refId)
+        self.effects = effects
+        self.preconditions = preconditions
+        self.time = time
+        self.effectText = effectText
+        self.involvedChars = involvedChars
+        self.consentingChars = consentingChars
+
+    def referrence(self):
         refIdNew = blackboard["refIdCount"]
         blackboard["refIdCount"] += 1
-        ref = ActionNode(this.baseId, refIdNew, this.effects, this.preconditions, this.time, this.effectText, this.involvedChars, this.consentingChars)
+        ref = ActionNode(self.effects, self.preconditions, baseId = self.baseId, refId = refIdNew, time = self.time, effectText = self.effectText, involvedChars = self.involvedChars, consentingChars = self.consentingChars)
         return ref
 
-    def execute():
-        if not blackboard["refId::"+refId]:
-            blackboard["refId::"+refId] = {}
+    def execute(self):
+        if not "refId::"+str(self.refId) in blackboard:
+            blackboard["refId::"+str(self.refId)] = {}
 
         if preconditions():
             effects()
-            blackboard["displayText"] += effectText
+            blackboard["displayText"] += self.effectText
             return "SUCCESS"
         else:
-            blackboard["baseId::"+this.baseId]["failures"] += 1
+            blackboard["baseId::"+str(self.baseId)]["failures"] += 1
             return "FAILURE"
 
 class CompositeNode(Node):
-    def __init__(self, baseId, refId, children):
-        Node.__init__(baseId, refId)
-        this.children = children
+    def __init__(self, children, baseId = -1, refId = -1):
+        Node.__init__(self, baseId, refId)
+        self.children = children
 
-    def referrence():
+    def referrence(self):
         refIdNew = blackboard["refIdCount"]
         blackboard["refIdCount"] += 1
         childRefs = []
-        for c in children:
+        for c in self.children:
             childRef = c.referrence()
-            childRefs.append(c);
-        ref = ActionNode(this.baseId, refIdNew, this.effects, childRefs)
+            childRefs.append(childRef);
+        ref = CompositeNode(childRefs, baseId = self.baseId, refId = refIdNew)
         return ref
 
-    def execute():
-        for c in children:
+    def execute(self):
+        for c in self.children:
             c.execute()
         return "SUCCESS"
 
-class SequenceNode(CompositeNode):
-    def execute():
-        if not blackboard["refId::"+refId]:
-            blackboard["refId::"+refId] = {}
-            blackboard["refId::"+refId]["currentIndex"] = 0;
+    def spec(self):
+        print("Base ID: " + str(self.baseId) + "\n")
+        print("Ref ID: " + str(self.refId) + "\n")
+        print("Children: [")
+        for c in self.children:
+            c.spec()
+        print("]\n")
 
-        status = children[blackboard["refId::"+refId]["currentIndex"]]
+class SequenceNode(CompositeNode):
+    def execute(self):
+        if not "refId::"+str(self.refId) in blackboard:
+            blackboard["refId::"+str(self.refId)] = {}
+            blackboard["refId::"+str(self.refId)]["currentIndex"] = 0;
+
+        status = self.children[blackboard["refId::"+str(self.refId)]["currentIndex"]]
 
         if status == "SUCCESS":
-            blackboard["refId::"+refId]["currentIndex"] += 1
-            if blackboard["refId::"+refId]["currentIndex"] < len(children):
+            blackboard["refId::"+str(self.refId)]["currentIndex"] += 1
+            if blackboard["refId::"+str(self.refId)]["currentIndex"] < len(self.children):
                 return "RUNNING"
             else:
-                blackboard["refId::"+refId]["currentIndex"] += 0
+                blackboard["refId::"+str(self.refId)]["currentIndex"] += 0
                 return "SUCCESS"
         elif status == "RUNNING":
             return "RUNNING"
@@ -93,30 +107,31 @@ class SequenceNode(CompositeNode):
             return "FAILURE"
 
 class SelectorNode(CompositeNode):
-    if not blackboard["refId::"+refId]:
-        blackboard["refId::"+refId] = {}
-        blackboard["refId::"+refId]["currentIndex"] = 0;
+    def execute(self):
+        if not "refId::"+str(self.refId) in blackboard:
+            blackboard["refId::"+str(self.refId)] = {}
+            blackboard["refId::"+str(self.refId)]["currentIndex"] = 0;
 
-    status = children[blackboard["refId::"+refId]["currentIndex"]]
+        status = self.children[blackboard["refId::"+str(self.refId)]["currentIndex"]]
 
-    if status == "SUCCESS":
-        return "SUCCESS"
-    elif status == "RUNNING":
-        return "RUNNING"
-    else:
-        blackboard["refId::"+refId]["currentIndex"] += 1
-        if blackboard["refId::"+refId]["currentIndex"] < len(children):
+        if status == "SUCCESS":
+            return "SUCCESS"
+        elif status == "RUNNING":
             return "RUNNING"
         else:
-            blackboard["refId::"+refId]["currentIndex"] += 0
-            return "FAILURE"
+            blackboard["refId::"+str(self.refId)]["currentIndex"] += 1
+            if blackboard["refId::"+str(self.refId)]["currentIndex"] < len(self.children):
+                return "RUNNING"
+            else:
+                blackboard["refId::"+str(self.refId)]["currentIndex"] += 0
+                return "FAILURE"
 
 #variables
 def setVariable(var, val):
     blackboard["variable::"+var] = val
 
 def getVariable(var):
-    if not blackboard["variable::"+var]:
+    if not "variable::"+var in blackboard:
         print("Variable " + var + " not set!")
         return
     return blackboard["variable::"+var]
@@ -142,9 +157,12 @@ agentTrees = []
 def attachTreeToAgent(agent, tree):
     treeRef = tree.referrence()
     agentTrees.append((agent, treeRef))
+    return treeRef
 
 #execution
 def turn():
     for t in agentTrees:
         setVariable("executingAgent", t[0])
+        blackboard["displayText"] = ""
         t[1].execute()
+        print("Effect Text: " + blackboard["displayText"])

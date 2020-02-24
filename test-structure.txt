@@ -1,0 +1,85 @@
+Base ID: 6
+
+Ref ID: 0
+
+Children: [
+  Base ID: 1
+
+  Ref ID: 1
+
+  Base ID: 5
+
+  Ref ID: 2
+
+  Children: [
+    Base ID: 3
+
+    Ref ID: 3
+
+    Children: [
+      Base ID: 0
+
+      Ref ID: 4
+
+      Base ID: 2
+
+      Ref ID: 5
+
+    ]
+
+    Base ID: 4
+
+    Ref ID: 6
+
+    Children: [
+      Base ID: 1
+
+      Ref ID: 7
+
+      Base ID: 2
+
+      Ref ID: 8
+
+    ]
+
+  ]
+
+]
+
+=====================================================
+Base ID: 5
+
+Ref ID: 9
+
+Children: [
+  Base ID: 3
+
+  Ref ID: 10
+
+  Children: [
+    Base ID: 0
+
+    Ref ID: 11
+
+    Base ID: 2
+
+    Ref ID: 12
+
+  ]
+
+  Base ID: 4
+
+  Ref ID: 13
+
+  Children: [
+    Base ID: 1
+
+    Ref ID: 14
+
+    Base ID: 2
+
+    Ref ID: 15
+
+  ]
+
+]
