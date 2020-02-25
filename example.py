@@ -14,8 +14,8 @@ def action1Effects():
     setVariable("b", True)
     setVariable("a", False)
 
-action1 = ActionNode(action1Precond(),
-                    action1Effects(),
+action1 = ActionNode(action1Precond,
+                    action1Effects,
                     effectText = "Action 1. ")
 
 def action2Precond():
@@ -24,8 +24,8 @@ def action2Precond():
 def action2Effects():
     setVariable("c", True)
 
-action2 = ActionNode(action2Precond(),
-                    action2Effects(),
+action2 = ActionNode(action2Precond,
+                    action2Effects,
                     effectText = "Action 2. ")
 
 def action3Precond():
@@ -36,8 +36,8 @@ def action3Effects():
     setVariable("b", False)
     setVariable("c", False)
 
-action3 = ActionNode(action3Precond(),
-                    action3Effects(),
+action3 = ActionNode(action3Precond,
+                    action3Effects,
                     effectText = "Action 3. ")
 
 sequence1 = SequenceNode([action1, action3])
@@ -48,6 +48,16 @@ selector2 = SelectorNode([action2, selector1])
 tree1 = attachTreeToAgent("Agent 1", selector2)
 tree2 = attachTreeToAgent("Agent 2", selector1)
 
-tree1.spec()
-print("=====================================================")
-tree2.spec()
+turn()
+inp = input("continue? (y/n): ")
+quit = False
+while (not quit):
+    if inp == "y":
+        turn()
+        inp = input("continue? (y/n): ")
+    elif inp == "n":
+        quit = True
+    else:
+        print("not recognized\n")
+        inp = input("continue? (y/n): ")
+print("goodbye")

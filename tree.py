@@ -13,6 +13,8 @@ class Node:
             self.baseId = baseId
         if not "baseId::"+str(self.baseId) in blackboard:
             blackboard["baseId::"+str(self.baseId)] = {}
+            blackboard["baseId::"+str(self.baseId)]["failures"] = 0
+            blackboard["baseId::"+str(self.baseId)]["attempts"] = 0
         self.refId = refId
 
     def referrence(self):
@@ -31,7 +33,7 @@ class Node:
 
 
 class ActionNode(Node):
-    def __init__(self, effects, preconditions, baseId = -1, refId = -1, time = 1, effectText = "", involvedChars = [], consentingChars = []):
+    def __init__(self, preconditions, effects, baseId = -1, refId = -1, time = 1, effectText = "", involvedChars = [], consentingChars = []):
         Node.__init__(self, baseId, refId)
         self.effects = effects
         self.preconditions = preconditions
@@ -43,18 +45,24 @@ class ActionNode(Node):
     def referrence(self):
         refIdNew = blackboard["refIdCount"]
         blackboard["refIdCount"] += 1
-        ref = ActionNode(self.effects, self.preconditions, baseId = self.baseId, refId = refIdNew, time = self.time, effectText = self.effectText, involvedChars = self.involvedChars, consentingChars = self.consentingChars)
+        ref = ActionNode(self.preconditions, self.effects, baseId = self.baseId, refId = refIdNew, time = self.time, effectText = self.effectText, involvedChars = self.involvedChars, consentingChars = self.consentingChars)
         return ref
 
     def execute(self):
         if not "refId::"+str(self.refId) in blackboard:
             blackboard["refId::"+str(self.refId)] = {}
 
-        if preconditions():
-            effects()
+        blackboard["baseId::"+str(self.baseId)]["attempts"] += 1
+
+        print("Exectuting: " + str(this.refId))
+
+        if self.preconditions():
+            print("SUCCESS")
+            self.effects()
             blackboard["displayText"] += self.effectText
             return "SUCCESS"
         else:
+            print("Failure")
             blackboard["baseId::"+str(self.baseId)]["failures"] += 1
             return "FAILURE"
 
@@ -74,6 +82,7 @@ class CompositeNode(Node):
         return ref
 
     def execute(self):
+        print("bad")
         for c in self.children:
             c.execute()
         return "SUCCESS"
@@ -106,6 +115,16 @@ class SequenceNode(CompositeNode):
         else:
             return "FAILURE"
 
+    def referrence(self):
+        refIdNew = blackboard["refIdCount"]
+        blackboard["refIdCount"] += 1
+        childRefs = []
+        for c in self.children:
+            childRef = c.referrence()
+            childRefs.append(childRef);
+        ref = SequenceNode(childRefs, baseId = self.baseId, refId = refIdNew)
+        return ref
+
 class SelectorNode(CompositeNode):
     def execute(self):
         if not "refId::"+str(self.refId) in blackboard:
@@ -125,6 +144,16 @@ class SelectorNode(CompositeNode):
             else:
                 blackboard["refId::"+str(self.refId)]["currentIndex"] += 0
                 return "FAILURE"
+
+    def referrence(self):
+        refIdNew = blackboard["refIdCount"]
+        blackboard["refIdCount"] += 1
+        childRefs = []
+        for c in self.children:
+            childRef = c.referrence()
+            childRefs.append(childRef);
+        ref = SelectorNode(childRefs, baseId = self.baseId, refId = refIdNew)
+        return ref
 
 #variables
 def setVariable(var, val):
