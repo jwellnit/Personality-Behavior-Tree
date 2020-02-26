@@ -44,6 +44,20 @@ class Node:
         blackboard["refId::"+str(self.refId)]["utility"] = utility
         return utility
 
+    #initial length processing
+    def lenPre(self):
+        length = 1
+        blackboard["refId::"+str(self.refId)]["lenPre"] = length
+        print("LenPre: " + str(self.refId) + ", " + str(length))
+        return length
+
+    #final length processing
+    def lenPost(self, extra):
+        length = blackboard["refId::"+str(self.refId)]["lenPre"] + extra
+        blackboard["refId::"+str(self.refId)]["lenPost"] = length
+        print("LenPost: " + str(self.refId) + ", " + str(length))
+        return length
+
 
 #typical leaves of the tree
 class ActionNode(Node):
@@ -59,6 +73,11 @@ class ActionNode(Node):
 
     def referrence(self):
         refIdNew = blackboard["refIdCount"]
+
+        #creae entry for refid in blackboard
+        if not "refId::"+str(refIdNew) in blackboard:
+            blackboard["refId::"+str(refIdNew)] = {}
+
         blackboard["refIdCount"] += 1
         ref = ActionNode(self.preconditions, self.effects, baseId = self.baseId, refId = refIdNew, time = self.time, effectText = self.effectText, involvedChars = self.involvedChars, consentingChars = self.consentingChars)
         return ref
@@ -129,6 +148,26 @@ class CompositeNode(Node):
         blackboard["refId::"+str(self.refId)]["utility"] = utility
         return utility
 
+    #initial length processing
+    def lenPre(self):
+        length = 0
+        for c in self.children:
+            length += c.lenPre()
+        blackboard["refId::"+str(self.refId)]["lenPre"] = length
+        print("LenPre: " + str(self.refId) + ", " + str(length))
+        return length
+
+    #final length processing
+    def lenPost(self, extra):
+        length = blackboard["refId::"+str(self.refId)]["lenPre"]
+        for c in self.children:
+            childLen = length - blackboard["refId::"+str(c.refId)]["lenPre"]
+            c.lenPost(extra + length - childLen)
+        blackboard["refId::"+str(self.refId)]["lenPost"] = length + extra
+        print("LenPost: " + str(self.refId) + ", " + str(length+extra))
+        return length + extra
+
+
 #sequence, inherits everything but execute and referrence
 class SequenceNode(CompositeNode):
     def execute(self):
@@ -157,6 +196,11 @@ class SequenceNode(CompositeNode):
     #deepcopy, referrence of self with referrences of children
     def referrence(self):
         refIdNew = blackboard["refIdCount"]
+
+        #creae entry for refid in blackboard
+        if not "refId::"+str(refIdNew) in blackboard:
+            blackboard["refId::"+str(refIdNew)] = {}
+
         blackboard["refIdCount"] += 1
         childRefs = []
         for c in self.children:
@@ -168,7 +212,7 @@ class SequenceNode(CompositeNode):
     #utility calc, average of children
     def utility(self):
         utilities = []
-        for c in children:
+        for c in self.children:
             utilities.append(c.utility())
         utility = 0
         for u in utilities:
@@ -176,6 +220,7 @@ class SequenceNode(CompositeNode):
         utility = utility/len(utilities)
         blackboard["refId::"+str(self.refId)]["utility"] = utility
         return utility
+
 
 #selector, inherits everything but execute and referrence
 class SelectorNode(CompositeNode):
@@ -205,6 +250,11 @@ class SelectorNode(CompositeNode):
     #deepcopy, referrence of self with referrences of children
     def referrence(self):
         refIdNew = blackboard["refIdCount"]
+
+        #creae entry for refid in blackboard
+        if not "refId::"+str(refIdNew) in blackboard:
+            blackboard["refId::"+str(refIdNew)] = {}
+
         blackboard["refIdCount"] += 1
         childRefs = []
         for c in self.children:
@@ -216,7 +266,7 @@ class SelectorNode(CompositeNode):
     #utility calc, max of children
     def utility(self):
         utilities = []
-        for c in children:
+        for c in self.children:
             utilities.append(c.utility())
         utility = -2
         for u in utilities:
@@ -224,6 +274,26 @@ class SelectorNode(CompositeNode):
                 utility = u
         blackboard["refId::"+str(self.refId)]["utility"] = utility
         return utility
+
+    #initial length processing
+    def lenPre(self):
+        length = 0
+        for c in self.children:
+            length += c.lenPre()
+        length /= len(self.children)
+        blackboard["refId::"+str(self.refId)]["lenPre"] = length
+        print("LenPre: " + str(self.refId) + ", " + str(length))
+        return length
+
+    #final length processing
+    def lenPost(self, extra):
+        length = blackboard["refId::"+str(self.refId)]["lenPre"]
+        for c in self.children:
+            c.lenPost(extra)
+        blackboard["refId::"+str(self.refId)]["lenPost"] = length + extra
+        print("LenPost: " + str(self.refId) + ", " + str(length+extra))
+        return length + extra
+
 
 #variables
 def setVariable(var, val):
