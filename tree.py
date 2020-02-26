@@ -38,6 +38,12 @@ class Node:
         print("Base ID: " + str(self.baseId) + "\n")
         print("Ref ID: " + str(self.refId) + "\n")
 
+    #utility calc, base, never called
+    def utility(self):
+        utility = 0
+        blackboard["refId::"+str(self.refId)]["utility"] = utility
+        return utility
+
 
 #typical leaves of the tree
 class ActionNode(Node):
@@ -78,6 +84,12 @@ class ActionNode(Node):
             blackboard["baseId::"+str(self.baseId)]["failures"] += 1
             return "FAILURE"
 
+    #utility calc, based on formula
+    def utility(self):
+        utility = 0
+        blackboard["refId::"+str(self.refId)]["utility"] = utility
+        return utility
+
 #parent of sequences and selectors
 class CompositeNode(Node):
     def __init__(self, children, baseId = -1, refId = -1):
@@ -110,6 +122,12 @@ class CompositeNode(Node):
         for c in self.children:
             c.spec()
         print("]\n")
+
+    #utility calc, base, never called
+    def utility(self):
+        utility = 0
+        blackboard["refId::"+str(self.refId)]["utility"] = utility
+        return utility
 
 #sequence, inherits everything but execute and referrence
 class SequenceNode(CompositeNode):
@@ -147,6 +165,18 @@ class SequenceNode(CompositeNode):
         ref = SequenceNode(childRefs, baseId = self.baseId, refId = refIdNew)
         return ref
 
+    #utility calc, average of children
+    def utility(self):
+        utilities = []
+        for c in children:
+            utilities.append(c.utility())
+        utility = 0
+        for u in utilities:
+            utility += u
+        utility = utility/len(utilities)
+        blackboard["refId::"+str(self.refId)]["utility"] = utility
+        return utility
+
 #selector, inherits everything but execute and referrence
 class SelectorNode(CompositeNode):
     def execute(self):
@@ -182,6 +212,18 @@ class SelectorNode(CompositeNode):
             childRefs.append(childRef);
         ref = SelectorNode(childRefs, baseId = self.baseId, refId = refIdNew)
         return ref
+
+    #utility calc, max of children
+    def utility(self):
+        utilities = []
+        for c in children:
+            utilities.append(c.utility())
+        utility = -2
+        for u in utilities:
+            if u > utility:
+                utility = u
+        blackboard["refId::"+str(self.refId)]["utility"] = utility
+        return utility
 
 #variables
 def setVariable(var, val):
