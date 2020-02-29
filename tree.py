@@ -58,6 +58,16 @@ class Node:
         print("LenPost: " + str(self.refId) + ", " + str(length))
         return length
 
+    #getting pairs of base id/count for a subtree
+    def getAtionCount(self):
+        dict = {}
+        dict[self.baseId] = 1
+        return dict
+
+    #set action counts for subtree
+    def setActionCounts(self, counts):
+        blackboard["refId::"+str(self.refId)]["actionCount"] = counts[self.baseId]
+
 
 #typical leaves of the tree
 class ActionNode(Node):
@@ -167,6 +177,19 @@ class CompositeNode(Node):
         print("LenPost: " + str(self.refId) + ", " + str(length+extra))
         return length + extra
 
+    #getting pairs of base id/count for a subtree
+    def getAtionCount(self):
+        dict = {}
+        for c in self.children:
+            chDict = c.getAtionCount()
+            for k in chDisct.keys():
+                dict[k] = dict.get(k, 0) + chDisct[k]
+        return dict
+
+    #set action counts for subtree
+    def setActionCounts(self, counts):
+        for c in self.children:
+            c.setActionCounts(counts)
 
 #sequence, inherits everything but execute and referrence
 class SequenceNode(CompositeNode):
@@ -293,6 +316,16 @@ class SelectorNode(CompositeNode):
         blackboard["refId::"+str(self.refId)]["lenPost"] = length + extra
         print("LenPost: " + str(self.refId) + ", " + str(length+extra))
         return length + extra
+
+#utility processing for sequences or selectors
+def utilityProcess(tree):
+    utilities = []
+    for c in tree.children:
+        c.lenPre()
+        c.lenPost(0)
+        c.setActionCounts(c.getAtionCount())
+        utilities.append(c.utility())
+    return utilities
 
 
 #variables
