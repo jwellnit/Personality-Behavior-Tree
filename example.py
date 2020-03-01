@@ -61,6 +61,3 @@ tree2 = attachTreeToAgent("Agent 2", selector1)
 #         print("not recognized\n")
 #         inp = input("continue? (y/n): ")
 # print("goodbye")
-
-tree1.lenPre()
-tree1.lenPost(0)

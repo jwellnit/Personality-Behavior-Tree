@@ -1,3 +1,5 @@
+from dill.source import getsource
+
 #initial blackboard setup
 blackboard = {};
 blackboard["baseIdCount"] = 0;
@@ -48,14 +50,14 @@ class Node:
     def lenPre(self):
         length = 1
         blackboard["refId::"+str(self.refId)]["lenPre"] = length
-        print("LenPre: " + str(self.refId) + ", " + str(length))
+        # print("LenPre: " + str(self.refId) + ", " + str(length))
         return length
 
     #final length processing
     def lenPost(self, extra):
         length = blackboard["refId::"+str(self.refId)]["lenPre"] + extra
         blackboard["refId::"+str(self.refId)]["lenPost"] = length
-        print("LenPost: " + str(self.refId) + ", " + str(length))
+        # print("LenPost: " + str(self.refId) + ", " + str(length))
         return length
 
     #getting pairs of base id/count for a subtree
@@ -71,15 +73,29 @@ class Node:
 
 #typical leaves of the tree
 class ActionNode(Node):
-    def __init__(self, preconditions, effects, baseId = -1, refId = -1, time = 1, effectText = "", involvedChars = [], consentingChars = []):
+    def __init__(self, preconditions, effects, baseId = -1, refId = -1, time = 1, effectText = "", involvedChars = "none", consentingChars = "none"):
         Node.__init__(self, baseId, refId) #constructor for nodes in general
         #set other properties
         self.effects = effects
         self.preconditions = preconditions
         self.time = time
+        self.involvedChars = []
         self.effectText = effectText
-        self.involvedChars = involvedChars
-        self.consentingChars = consentingChars
+        if involvedChars == "none":
+            temp = []
+            precond = getsource(preconditions)
+            eff = getsource(effects)
+            for a in agents:
+                if "\""+a+"\"" in precond or "\""+a+"\"" in eff:
+                    temp.append(a)
+            self.involvedChars = temp
+        else:
+            self.involvedChars = involvedChars
+        self.consentingChars = []
+        if consentingChars == "none":
+            self.consentingChars = ["$executingAgent$"]
+        else:
+            self.consentingChars = consentingChars
 
     def referrence(self):
         refIdNew = blackboard["refIdCount"]
@@ -164,7 +180,7 @@ class CompositeNode(Node):
         for c in self.children:
             length += c.lenPre()
         blackboard["refId::"+str(self.refId)]["lenPre"] = length
-        print("LenPre: " + str(self.refId) + ", " + str(length))
+        # print("LenPre: " + str(self.refId) + ", " + str(length))
         return length
 
     #final length processing
@@ -174,7 +190,7 @@ class CompositeNode(Node):
             childLen = length - blackboard["refId::"+str(c.refId)]["lenPre"]
             c.lenPost(extra + length - childLen)
         blackboard["refId::"+str(self.refId)]["lenPost"] = length + extra
-        print("LenPost: " + str(self.refId) + ", " + str(length+extra))
+        # print("LenPost: " + str(self.refId) + ", " + str(length+extra))
         return length + extra
 
     #getting pairs of base id/count for a subtree
@@ -364,6 +380,16 @@ def attachTreeToAgent(agent, tree):
     treeRef = tree.referrence()
     agentTrees.append((agent, treeRef))
     return treeRef
+
+#variables
+def setAgentVariable(agent, var, val):
+    blackboard["variable::"+agent+"::"+var] = val
+
+def getAgentVariable(agent, var):
+    if not "variable::"+ agent +"::"+var in blackboard:
+        print("Variable " + var + " not set!")
+        return
+    return blackboard["variable::"+ agent +"::"+var]
 
 #execution
 def turn():
