@@ -30,7 +30,7 @@ class Node:
         return ref
 
     #execute the node
-    def excute(self):
+    def execute(self):
         return "SUCCESS"
 
     #print out identifying informaation
@@ -129,11 +129,12 @@ class SequenceNode(CompositeNode):
                 return "RUNNING"
             else:
                 #finish if no more children
-                blackboard["refId::"+str(self.refId)]["currentIndex"] += 0
+                blackboard["refId::"+str(self.refId)]["currentIndex"] == 0
                 return "SUCCESS"
         elif status == "RUNNING":
             return "RUNNING"
         else:
+            blackboard["refId::"+str(self.refId)]["currentIndex"] == 0
             return "FAILURE"
 
     #deepcopy, referrence of self with referrences of children
@@ -159,6 +160,7 @@ class SelectorNode(CompositeNode):
         status = self.children[blackboard["refId::"+str(self.refId)]["currentIndex"]].execute()
 
         if status == "SUCCESS":
+            blackboard["refId::"+str(self.refId)]["currentIndex"] == 0
             return "SUCCESS"
         elif status == "RUNNING":
             return "RUNNING"
@@ -169,7 +171,7 @@ class SelectorNode(CompositeNode):
                 return "RUNNING"
             else:
                 #finish if no more children
-                blackboard["refId::"+str(self.refId)]["currentIndex"] += 0
+                blackboard["refId::"+str(self.refId)]["currentIndex"] == 0
                 return "FAILURE"
 
     #deepcopy, referrence of self with referrences of children
