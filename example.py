@@ -48,16 +48,16 @@ selector2 = SelectorNode([action2, selector1])
 tree1 = attachTreeToAgent("Agent 1", selector2)
 tree2 = attachTreeToAgent("Agent 2", selector1)
 
-# turn()
-# inp = input("continue? (y/n): ")
-# quit = False
-# while (not quit):
-#     if inp == "y":
-#         turn()
-#         inp = input("continue? (y/n): ")
-#     elif inp == "n":
-#         quit = True
-#     else:
-#         print("not recognized\n")
-#         inp = input("continue? (y/n): ")
-# print("goodbye")
+turn()
+inp = input("continue? (y/n): ")
+quit = False
+while (not quit):
+    if inp == "y":
+        turn()
+        inp = input("continue? (y/n): ")
+    elif inp == "n":
+        quit = True
+    else:
+        print("not recognized\n")
+        inp = input("continue? (y/n): ")
+print("goodbye")

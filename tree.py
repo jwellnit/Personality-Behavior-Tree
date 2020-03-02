@@ -132,6 +132,8 @@ class ActionNode(Node):
     #utility calc, based on formula
     def utility(self):
         utility = 0
+        #openness
+        
         blackboard["refId::"+str(self.refId)]["utility"] = utility
         return utility
 
