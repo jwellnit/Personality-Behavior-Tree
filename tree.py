@@ -19,8 +19,6 @@ class Node:
         #create an entry for this node type in the blackboard
         if not "baseId::"+str(self.baseId) in blackboard:
             blackboard["baseId::"+str(self.baseId)] = {}
-            blackboard["baseId::"+str(self.baseId)]["failures"] = 0
-            blackboard["baseId::"+str(self.baseId)]["attempts"] = 0
 
         self.refId = refId
 
@@ -69,6 +67,8 @@ class Node:
     #set action counts for subtree
     def setActionCounts(self, counts):
         blackboard["refId::"+str(self.refId)]["actionCount"] = counts[self.baseId]
+        if getVariable("maxAttempts") < blackboard["agent::"+str(getVariable("executingAgent"))]["baseId::"+str(self.baseId)]["attempts"]:
+            setVariable("maxAttempts", blackboard["agent::"+str(getVariable("executingAgent"))]["baseId::"+str(self.baseId)]["attempts"])
 
 
 #typical leaves of the tree
@@ -113,8 +113,17 @@ class ActionNode(Node):
         if not "refId::"+str(self.refId) in blackboard:
             blackboard["refId::"+str(self.refId)] = {}
 
+        if not "agent::"+str(getVariable("executingAgent")) in blackboard:
+            blackboard["agent::"+str(getVariable("executingAgent"))] = {}
+            blackboard["agent::"+str(getVariable("executingAgent"))] = {}
+
+        if not "baseId::"+str(self.baseId) in blackboard["agent::"+str(getVariable("executingAgent"))]:
+            blackboard["agent::"+str(getVariable("executingAgent"))]["baseId::"+str(self.baseId)] = {}
+            blackboard["agent::"+str(getVariable("executingAgent"))]["baseId::"+str(self.baseId)]["failures"] = 0
+            blackboard["agent::"+str(getVariable("executingAgent"))]["baseId::"+str(self.baseId)]["attempts"] = 0
+
         #increment attempts on node (used for utility)
-        blackboard["baseId::"+str(self.baseId)]["attempts"] += 1
+        blackboard["agent::"+str(getVariable("executingAgent"))]["baseId::"+str(self.baseId)]["attempts"] += 1
 
         print("Exectuting: " + str(self.refId))
 
@@ -126,14 +135,81 @@ class ActionNode(Node):
             return "SUCCESS"
         else:
             print("Failure")
-            blackboard["baseId::"+str(self.baseId)]["failures"] += 1
+            blackboard["agent::"+str(getVariable("executingAgent"))]["baseId::"+str(self.baseId)]["failures"] += 1
             return "FAILURE"
 
     #utility calc, based on formula
     def utility(self):
         utility = 0
+
         #openness
-        
+        #attempts made of this action type
+        o1 = 1 - blackboard["agent::"+str(getVariable("executingAgent"))]["baseId::"+str(self.baseId)]["attempts"]/getVariable("maxAttempts")
+        o1 = o1*2 - 1
+        #number of occurances/size of branch
+        o2 = 1 - blackboard["refId::"+str(self.refId)]["actionCount"]/blackboard["refId::"+str(self.refId)]["lenPost"]
+        o2 = o2*2 - 1
+        #failures over attempts
+        o3 = 1 - blackboard["agent::"+str(getVariable("executingAgent"))]["baseId::"+str(self.baseId)]["failures"]/blackboard["agent::"+str(getVariable("executingAgent"))]["baseId::"+str(self.baseId)]["attempts"]
+        o3 = o3*2 - 1
+        #combine
+        o = (o1+o2+o3)/3
+        o *= personality[str(getVariable("executingAgent"))]["o"]
+        o = (o+1)/2
+
+        #conscientiousness
+        #whether or not you are a consenting character
+        c1 = int("$executingAgent$" in self.consentingChars or str(getVariable("executingAgent")) in self.consentingChars)
+        c1 = c1*2 - 1
+        #length of branch
+        c2 = 1 - blackboard["refId::"+str(self.refId)]["lenPost"]/getVariable("maxLength")
+        c2 = c2*2 - 1
+        #combine
+        c = (c1+c2)/2
+        c *= personality[str(getVariable("executingAgent"))]["c"]
+        c = (c+1)/2
+
+        consentingChars = self.consentingChars.copy()
+        consentingChars.remove("$executingAgent$")
+        consentingChars.remove(str(getVariable("executingAgent")))
+        involvedChars = self.involvedChars.copy()
+        consentingChars.remove("$executingAgent$")
+        consentingChars.remove(str(getVariable("executingAgent")))
+
+        #extraversion
+        #porportion of consenting characters
+        e1 = len(consentingChars)/len(agents)
+        e1 = e1*2 - 1
+        #porportion of non consenting characters
+        e2 = len(set(involvedChars) - set(consentingChars))/len(agentTrees)
+        e2 = e2*2 - 1
+        #combine
+        e = (e1+e2)/2
+        e *= personality[str(getVariable("executingAgent"))]["e"]
+        e = (e+1)/2
+
+        #Agreeableness
+        #porportion of consenting characters
+        a1 = len(consentingChars)/len(agents)
+        a1 = a1*2 - 1
+        #porportion of non consenting characters
+        a2 = 1 - len(set(involvedChars) - set(consentingChars))/len(agentTrees)
+        a2 = a2*2 - 1
+        #combine
+        a = (a1+a2)/2
+        a *= personality[str(getVariable("executingAgent"))]["a"]
+        a = (a+1)/2
+
+        #neuroticism
+        #failures over attempts
+        n = 1 - blackboard["agent::"+str(getVariable("executingAgent"))]["baseId::"+str(self.baseId)]["failures"]/blackboard["agent::"+str(getVariable("executingAgent"))]["baseId::"+str(self.baseId)]["attempts"]
+        n = n*2 - 1
+        n *= personality[str(getVariable("executingAgent"))]["n"]
+        n = (n+1)/2
+
+        #get final utility val
+        utility = sqrt(o**2 + c**2 + e**2 + a**2 + n**2)
+
         blackboard["refId::"+str(self.refId)]["utility"] = utility
         return utility
 
@@ -238,10 +314,6 @@ class SequenceNode(CompositeNode):
     def referrence(self):
         refIdNew = blackboard["refIdCount"]
 
-        #creae entry for refid in blackboard
-        if not "refId::"+str(refIdNew) in blackboard:
-            blackboard["refId::"+str(refIdNew)] = {}
-
         blackboard["refIdCount"] += 1
         childRefs = []
         for c in self.children:
@@ -291,10 +363,6 @@ class SelectorNode(CompositeNode):
     #deepcopy, referrence of self with referrences of children
     def referrence(self):
         refIdNew = blackboard["refIdCount"]
-
-        #creae entry for refid in blackboard
-        if not "refId::"+str(refIdNew) in blackboard:
-            blackboard["refId::"+str(refIdNew)] = {}
 
         blackboard["refIdCount"] += 1
         childRefs = []
