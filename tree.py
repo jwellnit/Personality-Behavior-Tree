@@ -1,4 +1,5 @@
 from dill.source import getsource
+import math
 
 #initial blackboard setup
 blackboard = {};
@@ -69,6 +70,18 @@ class Node:
         blackboard["refId::"+str(self.refId)]["actionCount"] = counts[self.baseId]
         if getVariable("maxAttempts") < blackboard["agent::"+str(getVariable("executingAgent"))]["baseId::"+str(self.baseId)]["attempts"]:
             setVariable("maxAttempts", blackboard["agent::"+str(getVariable("executingAgent"))]["baseId::"+str(self.baseId)]["attempts"])
+
+    def initialize(self):
+        #creae entry for refid in blackboard
+        if not "refId::"+str(self.refId) in blackboard:
+            blackboard["refId::"+str(self.refId)] = {}
+
+        if not "agent::"+str(getVariable("executingAgent")) in blackboard:
+            blackboard["agent::"+str(getVariable("executingAgent"))] = {}
+            blackboard["agent::"+str(getVariable("executingAgent"))] = {}
+
+        if not "baseId::"+str(self.baseId) in blackboard["agent::"+str(getVariable("executingAgent"))]:
+            blackboard["agent::"+str(getVariable("executingAgent"))]["baseId::"+str(self.baseId)] = {}
 
 
 #typical leaves of the tree
@@ -144,14 +157,19 @@ class ActionNode(Node):
 
         #openness
         #attempts made of this action type
-        o1 = 1 - blackboard["agent::"+str(getVariable("executingAgent"))]["baseId::"+str(self.baseId)]["attempts"]/getVariable("maxAttempts")
-        o1 = o1*2 - 1
+        o1 = 0
+        if getVariable("maxAttempts") > 0:
+            o1 = 1 - blackboard["agent::"+str(getVariable("executingAgent"))]["baseId::"+str(self.baseId)]["attempts"]/getVariable("maxAttempts")
+            o1 = o1*2 - 1
+
         #number of occurances/size of branch
         o2 = 1 - blackboard["refId::"+str(self.refId)]["actionCount"]/blackboard["refId::"+str(self.refId)]["lenPost"]
         o2 = o2*2 - 1
         #failures over attempts
-        o3 = 1 - blackboard["agent::"+str(getVariable("executingAgent"))]["baseId::"+str(self.baseId)]["failures"]/blackboard["agent::"+str(getVariable("executingAgent"))]["baseId::"+str(self.baseId)]["attempts"]
-        o3 = o3*2 - 1
+        o3 = 0
+        if blackboard["agent::"+str(getVariable("executingAgent"))]["baseId::"+str(self.baseId)]["attempts"] > 0:
+            o3 = 1 - blackboard["agent::"+str(getVariable("executingAgent"))]["baseId::"+str(self.baseId)]["failures"]/blackboard["agent::"+str(getVariable("executingAgent"))]["baseId::"+str(self.baseId)]["attempts"]
+            o3 = o3*2 - 1
         #combine
         o = (o1+o2+o3)/3
         o *= personality[str(getVariable("executingAgent"))]["o"]
@@ -170,12 +188,15 @@ class ActionNode(Node):
         c = (c+1)/2
 
         consentingChars = self.consentingChars.copy()
-        consentingChars.remove("$executingAgent$")
-        consentingChars.remove(str(getVariable("executingAgent")))
+        if "$executingAgent$" in consentingChars:
+            consentingChars.remove("$executingAgent$")
+        if str(getVariable("executingAgent")) in consentingChars:
+            consentingChars.remove(str(getVariable("executingAgent")))
         involvedChars = self.involvedChars.copy()
-        consentingChars.remove("$executingAgent$")
-        consentingChars.remove(str(getVariable("executingAgent")))
-
+        if "$executingAgent$" in involvedChars:
+            involved.remove("$executingAgent$")
+        if str(getVariable("executingAgent")) in involvedChars:
+            involvedChars.remove(str(getVariable("executingAgent")))
         #extraversion
         #porportion of consenting characters
         e1 = len(consentingChars)/len(agents)
@@ -202,16 +223,32 @@ class ActionNode(Node):
 
         #neuroticism
         #failures over attempts
-        n = 1 - blackboard["agent::"+str(getVariable("executingAgent"))]["baseId::"+str(self.baseId)]["failures"]/blackboard["agent::"+str(getVariable("executingAgent"))]["baseId::"+str(self.baseId)]["attempts"]
-        n = n*2 - 1
+        n = 0
+        if blackboard["agent::"+str(getVariable("executingAgent"))]["baseId::"+str(self.baseId)]["attempts"] > 0:
+            n = 1 - blackboard["agent::"+str(getVariable("executingAgent"))]["baseId::"+str(self.baseId)]["failures"]/blackboard["agent::"+str(getVariable("executingAgent"))]["baseId::"+str(self.baseId)]["attempts"]
+            n = n*2 - 1
         n *= personality[str(getVariable("executingAgent"))]["n"]
         n = (n+1)/2
 
         #get final utility val
-        utility = sqrt(o**2 + c**2 + e**2 + a**2 + n**2)
+        utility = math.sqrt(o**2 + c**2 + e**2 + a**2 + n**2)
 
         blackboard["refId::"+str(self.refId)]["utility"] = utility
         return utility
+
+    def initialize(self):
+        #creae entry for refid in blackboard
+        if not "refId::"+str(self.refId) in blackboard:
+            blackboard["refId::"+str(self.refId)] = {}
+
+        if not "agent::"+str(getVariable("executingAgent")) in blackboard:
+            blackboard["agent::"+str(getVariable("executingAgent"))] = {}
+            blackboard["agent::"+str(getVariable("executingAgent"))] = {}
+
+        if not "baseId::"+str(self.baseId) in blackboard["agent::"+str(getVariable("executingAgent"))]:
+            blackboard["agent::"+str(getVariable("executingAgent"))]["baseId::"+str(self.baseId)] = {}
+            blackboard["agent::"+str(getVariable("executingAgent"))]["baseId::"+str(self.baseId)]["failures"] = 0
+            blackboard["agent::"+str(getVariable("executingAgent"))]["baseId::"+str(self.baseId)]["attempts"] = 0
 
 #parent of sequences and selectors
 class CompositeNode(Node):
@@ -276,14 +313,30 @@ class CompositeNode(Node):
         dict = {}
         for c in self.children:
             chDict = c.getAtionCount()
-            for k in chDisct.keys():
-                dict[k] = dict.get(k, 0) + chDisct[k]
+            for k in chDict.keys():
+                dict[k] = dict.get(k, 0) + chDict[k]
         return dict
 
     #set action counts for subtree
     def setActionCounts(self, counts):
         for c in self.children:
             c.setActionCounts(counts)
+
+    def initialize(self):
+        #creae entry for refid in blackboard
+        if not "refId::"+str(self.refId) in blackboard:
+            blackboard["refId::"+str(self.refId)] = {}
+            blackboard["refId::"+str(self.refId)]["currentIndex"] = 0;
+
+        if not "agent::"+str(getVariable("executingAgent")) in blackboard:
+            blackboard["agent::"+str(getVariable("executingAgent"))] = {}
+            blackboard["agent::"+str(getVariable("executingAgent"))] = {}
+
+        if not "baseId::"+str(self.baseId) in blackboard["agent::"+str(getVariable("executingAgent"))]:
+            blackboard["agent::"+str(getVariable("executingAgent"))]["baseId::"+str(self.baseId)] = {}
+
+        for c in self.children:
+            c.initialize()
 
 #sequence, inherits everything but execute and referrence
 class SequenceNode(CompositeNode):
@@ -405,13 +458,70 @@ class SelectorNode(CompositeNode):
         print("LenPost: " + str(self.refId) + ", " + str(length+extra))
         return length + extra
 
+#orders branches at execute based on utility
+class SelectorUtilityNode(SelectorNode):
+    def execute(self):
+        if getVariable("executingAgent") in personality:
+            #get utilities
+            utilities = utilityProcess(self)
+
+            pairs = []
+            for i in range(len(utilities)):
+                pairs.append((utilities[i], self.children[i]))
+
+            #sort pairs
+            pairs.sort(key = lambda pair: pair[0])
+
+            print(pairs)
+
+        #make entry for refid
+        if not "refId::"+str(self.refId) in blackboard:
+            blackboard["refId::"+str(self.refId)] = {}
+            blackboard["refId::"+str(self.refId)]["currentIndex"] = 0;
+
+        #execute next child
+        status = self.children[blackboard["refId::"+str(self.refId)]["currentIndex"]].execute()
+
+        if status == "SUCCESS":
+            blackboard["refId::"+str(self.refId)]["currentIndex"] = 0
+            return "SUCCESS"
+        elif status == "RUNNING":
+            return "RUNNING"
+        else:
+            #keep going on failure, save next index for next turn
+            blackboard["refId::"+str(self.refId)]["currentIndex"] += 1
+            if blackboard["refId::"+str(self.refId)]["currentIndex"] < len(self.children):
+                return "RUNNING"
+            else:
+                #finish if no more children
+                blackboard["refId::"+str(self.refId)]["currentIndex"] = 0
+                return "FAILURE"
+
+    #deepcopy, referrence of self with referrences of children
+    def referrence(self):
+        refIdNew = blackboard["refIdCount"]
+
+        blackboard["refIdCount"] += 1
+        childRefs = []
+        for c in self.children:
+            childRef = c.referrence()
+            childRefs.append(childRef);
+        ref = SelectorUtilityNode(childRefs, baseId = self.baseId, refId = refIdNew)
+        return ref
+
 #utility processing for sequences or selectors
 def utilityProcess(tree):
     utilities = []
+    setVariable("maxLength", 0)
+    setVariable("maxAttempts", 0)
     for c in tree.children:
+        c.initialize()
         c.lenPre()
-        c.lenPost(0)
+        leng = c.lenPost(0)
+        if leng > getVariable("maxLength"):
+            setVariable("maxLength", leng)
         c.setActionCounts(c.getAtionCount())
+    for c in tree.children:
         utilities.append(c.utility())
     return utilities
 

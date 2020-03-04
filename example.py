@@ -4,8 +4,8 @@ setVariable("a", True)
 setVariable("b", False)
 setVariable("c", False)
 
-addAgent("Agent 1")
-addPersonalityAgent("Agent 2", 0, 0, 0, 0, 0)
+addAgent("Agent 2")
+addPersonalityAgent("Agent 1", 0, 0, 0, 0, 0)
 
 def action1Precond():
     return getVariable("a")
@@ -43,7 +43,7 @@ action3 = ActionNode(action3Precond,
 sequence1 = SequenceNode([action1, action3])
 sequence2 = SequenceNode([action2, action3])
 selector1 = SelectorNode([sequence1, sequence2])
-selector2 = SelectorNode([action2, selector1])
+selector2 = SelectorUtilityNode([action2, selector1])
 
 tree1 = attachTreeToAgent("Agent 1", selector2)
 tree2 = attachTreeToAgent("Agent 2", selector1)
