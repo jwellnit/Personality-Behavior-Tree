@@ -1,5 +1,6 @@
 from dill.source import getsource
 import math
+import random
 
 #initial blackboard setup
 blackboard = {};
@@ -507,6 +508,78 @@ class SelectorUtilityNode(SelectorNode):
             childRef = c.referrence()
             childRefs.append(childRef);
         ref = SelectorUtilityNode(childRefs, baseId = self.baseId, refId = refIdNew)
+        return ref
+
+#sequence, uses utility to automatically fail sometimes
+class SequenceUtilityNode(SelectorNode):
+    def execute(self):
+        #make entry for refid
+        if not "refId::"+str(self.refId) in blackboard:
+            blackboard["refId::"+str(self.refId)] = {}
+            blackboard["refId::"+str(self.refId)]["currentIndex"] = 0;
+
+
+        if getVariable("executingAgent") in personality:
+            #get utilities
+            utilities = utilityProcess(self)
+
+            #likelihood of failure of next child
+            n = persoanlity[str(getVariable(executingAgent))]["n"]
+            n = (n+1)/2
+            u = utilities[blackboard["refId::"+str(self.refId)]["currentIndex"]]
+            u = u/math.sqrt(5)
+            p = (n*u)/2
+            if random.random() <= p:
+                blackboard["refId::"+str(self.refId)]["currentIndex"] = 0
+                return "FAILURE"
+
+            #execute next child
+            status = self.children[blackboard["refId::"+str(self.refId)]["currentIndex"]].execute()
+
+            if status == "SUCCESS":
+                #keep going on success, save next index for next turn
+                blackboard["refId::"+str(self.refId)]["currentIndex"] += 1
+                if blackboard["refId::"+str(self.refId)]["currentIndex"] < len(self.children):
+                    return "RUNNING"
+                else:
+                    #finish if no more children
+                    blackboard["refId::"+str(self.refId)]["currentIndex"] = 0
+                    return "SUCCESS"
+            elif status == "RUNNING":
+                return "RUNNING"
+            else:
+                blackboard["refId::"+str(self.refId)]["currentIndex"] = 0
+                return "FAILURE"
+
+        else:
+            #execute next child
+            status = self.children[blackboard["refId::"+str(self.refId)]["currentIndex"]].execute()
+
+            if status == "SUCCESS":
+                #keep going on success, save next index for next turn
+                blackboard["refId::"+str(self.refId)]["currentIndex"] += 1
+                if blackboard["refId::"+str(self.refId)]["currentIndex"] < len(self.children):
+                    return "RUNNING"
+                else:
+                    #finish if no more children
+                    blackboard["refId::"+str(self.refId)]["currentIndex"] = 0
+                    return "SUCCESS"
+            elif status == "RUNNING":
+                return "RUNNING"
+            else:
+                blackboard["refId::"+str(self.refId)]["currentIndex"] = 0
+                return "FAILURE"
+
+    #deepcopy, referrence of self with referrences of children
+    def referrence(self):
+        refIdNew = blackboard["refIdCount"]
+
+        blackboard["refIdCount"] += 1
+        childRefs = []
+        for c in self.children:
+            childRef = c.referrence()
+            childRefs.append(childRef);
+        ref = SequenceUtilityNode(childRefs, baseId = self.baseId, refId = refIdNew)
         return ref
 
 #utility processing for sequences or selectors
