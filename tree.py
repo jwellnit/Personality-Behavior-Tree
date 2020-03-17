@@ -657,8 +657,7 @@ class GuardNode(CompositeNode):
         if not "baseId::"+str(self.baseId) in blackboard["agent::"+str(getVariable("executingAgent"))]:
             blackboard["agent::"+str(getVariable("executingAgent"))]["baseId::"+str(self.baseId)] = {}
 
-        for c in self.children:
-            c.initialize()
+        self.child.initialize()
 
 #utility processing for sequences or selectors
 def utilityProcess(tree):
