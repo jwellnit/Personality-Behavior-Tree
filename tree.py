@@ -511,7 +511,7 @@ class SelectorUtilityNode(SelectorNode):
         return ref
 
 #sequence, uses utility to automatically fail sometimes
-class SequenceUtilityNode(SelectorNode):
+class SequenceUtilityNode(SequenceNode):
     def execute(self):
         #make entry for refid
         if not "refId::"+str(self.refId) in blackboard:
@@ -581,6 +581,84 @@ class SequenceUtilityNode(SelectorNode):
             childRefs.append(childRef);
         ref = SequenceUtilityNode(childRefs, baseId = self.baseId, refId = refIdNew)
         return ref
+
+#guard
+class GuardNode(CompositeNode):
+    def __init__(self, preconditions, child, baseId = -1, refId = -1):
+        Node.__init__(self, baseId, refId)
+        self.child = child #child node
+        self.preconditions = preconditions
+
+    #deepcopy, referrence of self with referrences of children
+    def referrence(self):
+        refIdNew = blackboard["refIdCount"]
+        blackboard["refIdCount"] += 1
+        childRef = self.child.referrence()
+        ref = CompositeNode(self.preconditions, childRef, baseId = self.baseId, refId = refIdNew)
+        return ref
+
+    #parent node type, should never execute
+    def execute(self):
+        if self.preconditions():
+            return self.child.execute()
+        else:
+            return "FAILURE"
+
+    #print info
+    def spec(self):
+        print("Base ID: " + str(self.baseId) + "\n")
+        print("Ref ID: " + str(self.refId) + "\n")
+        print("Child: ")
+        self.child.spec()
+        print("\n")
+
+    #utility calc, base, never called
+    def utility(self):
+        utility = self.child.utility()
+        blackboard["refId::"+str(self.refId)]["utility"] = utility
+        return utility
+
+    #initial length processing
+    def lenPre(self):
+        length = self.child.lenPre()
+        blackboard["refId::"+str(self.refId)]["lenPre"] = length
+        # print("LenPre: " + str(self.refId) + ", " + str(length))
+        return length
+
+    #final length processing
+    def lenPost(self, extra):
+        length = blackboard["refId::"+str(self.refId)]["lenPre"]
+        for c in self.children:
+            childLen = length - blackboard["refId::"+str(c.refId)]["lenPre"]
+            c.lenPost(extra + childLen)
+        blackboard["refId::"+str(self.refId)]["lenPost"] = length + extra
+        # print("LenPost: " + str(self.refId) + ", " + str(length+extra))
+        return length + extra
+
+    #getting pairs of base id/count for a subtree
+    def getAtionCount(self):
+        dict = self.child.getAtionCount()
+        return dict
+
+    #set action counts for subtree
+    def setActionCounts(self, counts):
+        self.child.setActionCounts(counts)
+
+    def initialize(self):
+        #creae entry for refid in blackboard
+        if not "refId::"+str(self.refId) in blackboard:
+            blackboard["refId::"+str(self.refId)] = {}
+            blackboard["refId::"+str(self.refId)]["currentIndex"] = 0;
+
+        if not "agent::"+str(getVariable("executingAgent")) in blackboard:
+            blackboard["agent::"+str(getVariable("executingAgent"))] = {}
+            blackboard["agent::"+str(getVariable("executingAgent"))] = {}
+
+        if not "baseId::"+str(self.baseId) in blackboard["agent::"+str(getVariable("executingAgent"))]:
+            blackboard["agent::"+str(getVariable("executingAgent"))]["baseId::"+str(self.baseId)] = {}
+
+        for c in self.children:
+            c.initialize()
 
 #utility processing for sequences or selectors
 def utilityProcess(tree):
