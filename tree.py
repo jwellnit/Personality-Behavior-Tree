@@ -678,9 +678,15 @@ def utilityProcess(tree):
 
 #variables
 def setVariable(var, val):
+    if var[0] == '$' and var[-1] == '$':
+        var = getVariable(var[1:-1])
+    if val[0] == '$' and val[-1] == '$':
+        val = getVariable(val[1:-1])
     blackboard["variable::"+var] = val
 
 def getVariable(var):
+    if var[0] == '$' and var[-1] == '$':
+        var = getVariable(var[1:-1])
     if not "variable::"+var in blackboard:
         print("Variable " + var + " not set!")
         return
@@ -715,9 +721,19 @@ def attachTreeToAgent(agent, tree):
 
 #variables
 def setAgentVariable(agent, var, val):
+    if var[0] == '$' and var[-1] == '$':
+        var = getVariable(var[1:-1])
+    if val[0] == '$' and val[-1] == '$':
+        val = getVariable(val[1:-1])
+    if agent[0] == '$' and agent[-1] == '$':
+        agent = getVariable(agent[1:-1])
     blackboard["variable::"+agent+"::"+var] = val
 
 def getAgentVariable(agent, var):
+    if var[0] == '$' and var[-1] == '$':
+        var = getVariable(var[1:-1])
+    if agent[0] == '$' and agent[-1] == '$':
+        agent = getVariable(agent[1:-1])
     if not "variable::"+ agent +"::"+var in blackboard:
         print("Variable " + var + " not set!")
         return
