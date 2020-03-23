@@ -102,6 +102,7 @@ class ActionNode(Node):
             for a in agents:
                 if "\""+a+"\"" in precond or "\""+a+"\"" in eff:
                     temp.append(a)
+            temp.append("$executingAgent$")
             self.involvedChars = temp
         else:
             self.involvedChars = involvedChars

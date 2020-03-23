@@ -1,46 +1,67 @@
 from tree import *
 
-TOM_HOUSE = "TOM_HOUSE";
-ALCH_HOUSE = "ALCH_HOUSE";
-WOODS = "WOODS";
+TOM_HOUSE = "TOM_HOUSE"
+ALCH_HOUSE = "ALCH_HOUSE"
+WOODS = "WOODS"
 
 addPersonalityAgent("Tom", 0, 0, 0, 0, 0)
 addPersonalityAgent("Alchemist", 0, 0, 0, 0, 0)
 
-setVariable("herbsLocation", WOODS);
-setVariable("coinLocation", "tom");
-setVariable("potionLocation", "none");
-setVariable("formulaLocation", ALCH_HOUSE);
-setVariable("poisonLocation", ALCH_HOUSE);
+setVariable("herbsLocation", WOODS)
+setVariable("coinLocation", "tom")
+setVariable("potionLocation", "none")
+setVariable("formulaLocation", ALCH_HOUSE)
+setVariable("poisonLocation", ALCH_HOUSE)
 
-setAgentVariable("Alchemist", "location", ALCH_HOUSE);
-setVariable("sleep", False);
-setVariable("poisonTicks", 0);
-setVariable("knowHerbs", False);
-setVariable("offer", False);
-setVariable("cure", False);
-setAgentVariable("Tom", "location", TOM_HOUSE);
+setAgentVariable("Alchemist", "location", ALCH_HOUSE)
+setVariable("sleep", False)
+setVariable("poisonTicks", 0)
+setVariable("knowHerbs", False)
+setVariable("offer", False)
+setVariable("cure", False)
+setAgentVariable("Tom", "location", TOM_HOUSE)
 
-def action1Precond():
-    return getVariable("a")
+def moveWoodsPrecond():
+    return not setAgentVariable("$executingAgent$", "location") == WOODS
 
-def action1Effects():
-    setVariable("b", True)
-    setVariable("a", False)
+def moveWoodsEffects():
+    setAgentVariable("$executingAgent$", "location", WOODS)
 
-action1 = ActionNode(action1Precond,
-                    action1Effects,
-                    effectText = "Action 1. ")
+moveWoods = ActionNode(moveWoodsPrecond,
+                    moveWoodsEffects,
+                    effectText = "Move to the woods. ")
 
-def action2Precond():
-    return getVariable("b")
+def moveAlchPrecond():
+    return not setAgentVariable("$executingAgent$", "location") == ALCH_HOUSE
 
-def action2Effects():
-    setVariable("c", True)
+def moveAlchEffects():
+    setAgentVariable("$executingAgent$", "location", ALCH_HOUSE)
 
-action2 = ActionNode(action2Precond,
-                    action2Effects,
-                    effectText = "Action 2. ")
+moveAlch = ActionNode(moveAlchPrecond,
+                    moveAlchEffects,
+                    effectText = "Move to the Alchemist's house. ")
+
+def moveTomPrecond():
+    return not setAgentVariable("$executingAgent$", "location") == TOM_HOUSE
+
+def moveTomEffects():
+    setAgentVariable("$executingAgent$", "location", TOM_HOUSE)
+
+moveTom = ActionNode(moveTomPrecond,
+                    moveTomEffects,
+                    effectText = "Move to Tom's house. ")
+
+def waitPrecond():
+    return True
+
+def waitEffects():
+    return
+
+wait = ActionNode(waitPrecond,
+                    waitEffects,
+                    effectText = "Wait. ",
+                    involvedChars = ["$executingAgent$"],
+                    consentingChars = [])
 
 def action3Precond():
     return getVariable("b") and getVariable("c")
