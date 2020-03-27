@@ -126,6 +126,8 @@ class ActionNode(Node):
         return ref
 
     def execute(self):
+        print(str(self.refId))
+
         #creae entry for refid in blackboard
         if not "refId::"+str(self.refId) in blackboard:
             blackboard["refId::"+str(self.refId)] = {}
@@ -356,6 +358,7 @@ class CompositeNode(Node):
 #sequence, inherits everything but execute and referrence
 class SequenceNode(CompositeNode):
     def execute(self):
+        print(str(self.refId))
         #make entry for refid
         if not "refId::"+str(self.refId) in blackboard:
             blackboard["refId::"+str(self.refId)] = {}
@@ -407,6 +410,7 @@ class SequenceNode(CompositeNode):
 #selector, inherits everything but execute and referrence
 class SelectorNode(CompositeNode):
     def execute(self):
+        print(str(self.refId))
         #make entry for refid
         if not "refId::"+str(self.refId) in blackboard:
             blackboard["refId::"+str(self.refId)] = {}
@@ -415,20 +419,22 @@ class SelectorNode(CompositeNode):
         #execute next child
         status = self.children[blackboard["refId::"+str(self.refId)]["currentIndex"]].execute()
 
-        if status == "SUCCESS":
-            blackboard["refId::"+str(self.refId)]["currentIndex"] = 0
-            return "SUCCESS"
-        elif status == "RUNNING":
-            return "RUNNING"
-        else:
-            #keep going on failure, save next index for next turn
-            blackboard["refId::"+str(self.refId)]["currentIndex"] += 1
-            if blackboard["refId::"+str(self.refId)]["currentIndex"] < len(self.children):
+        while(True):
+            if status == "SUCCESS":
+                blackboard["refId::"+str(self.refId)]["currentIndex"] = 0
+                return "SUCCESS"
+            elif status == "RUNNING":
                 return "RUNNING"
             else:
-                #finish if no more children
-                blackboard["refId::"+str(self.refId)]["currentIndex"] = 0
-                return "FAILURE"
+                #keep going on failure, save next index for next turn
+                blackboard["refId::"+str(self.refId)]["currentIndex"] += 1
+                if blackboard["refId::"+str(self.refId)]["currentIndex"] < len(self.children):
+                    #return "RUNNING"
+                    print("continue")
+                else:
+                    #finish if no more children
+                    blackboard["refId::"+str(self.refId)]["currentIndex"] = 0
+                    return "FAILURE"
 
     #deepcopy, referrence of self with referrences of children
     def referrence(self):
@@ -476,6 +482,7 @@ class SelectorNode(CompositeNode):
 #orders branches at execute based on utility
 class SelectorUtilityNode(SelectorNode):
     def execute(self):
+        print(str(self.refId))
         if getVariable("executingAgent") in personality:
             #get utilities
             utilities = utilityProcess(self)
@@ -497,20 +504,22 @@ class SelectorUtilityNode(SelectorNode):
         #execute next child
         status = self.children[blackboard["refId::"+str(self.refId)]["currentIndex"]].execute()
 
-        if status == "SUCCESS":
-            blackboard["refId::"+str(self.refId)]["currentIndex"] = 0
-            return "SUCCESS"
-        elif status == "RUNNING":
-            return "RUNNING"
-        else:
-            #keep going on failure, save next index for next turn
-            blackboard["refId::"+str(self.refId)]["currentIndex"] += 1
-            if blackboard["refId::"+str(self.refId)]["currentIndex"] < len(self.children):
+        while(True):
+            if status == "SUCCESS":
+                blackboard["refId::"+str(self.refId)]["currentIndex"] = 0
+                return "SUCCESS"
+            elif status == "RUNNING":
                 return "RUNNING"
             else:
-                #finish if no more children
-                blackboard["refId::"+str(self.refId)]["currentIndex"] = 0
-                return "FAILURE"
+                #keep going on failure, save next index for next turn
+                blackboard["refId::"+str(self.refId)]["currentIndex"] += 1
+                if blackboard["refId::"+str(self.refId)]["currentIndex"] < len(self.children):
+                    #return "RUNNING"
+                    print("continue")
+                else:
+                    #finish if no more children
+                    blackboard["refId::"+str(self.refId)]["currentIndex"] = 0
+                    return "FAILURE"
 
     #deepcopy, referrence of self with referrences of children
     def referrence(self):
@@ -527,6 +536,7 @@ class SelectorUtilityNode(SelectorNode):
 #sequence, uses utility to automatically fail sometimes
 class SequenceUtilityNode(SequenceNode):
     def execute(self):
+        print(str(self.refId))
         #make entry for refid
         if not "refId::"+str(self.refId) in blackboard:
             blackboard["refId::"+str(self.refId)] = {}
@@ -545,6 +555,7 @@ class SequenceUtilityNode(SequenceNode):
             p = (n*u)/2
             if random.random() <= p:
                 blackboard["refId::"+str(self.refId)]["currentIndex"] = 0
+                print("quit")
                 return "FAILURE"
 
             #execute next child
@@ -613,6 +624,7 @@ class GuardNode(CompositeNode):
 
     #parent node type, should never execute
     def execute(self):
+        print(str(self.refId))
         if self.preconditions():
             return self.child.execute()
         else:

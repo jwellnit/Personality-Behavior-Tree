@@ -299,9 +299,9 @@ def poisonGuardPrecond():
 
 poisonGuard = GuardNode(poisonGuardPrecond, poisoned)
 
-actions = SequenceNode([poisonGuard, sleepGuard, awake])
+actions = SelectorNode([poisonGuard, sleepGuard, awake])
 
-plans = SequenceUtilityNode([stealCraft, stealAlch, purchase, purchaseCraft])
+plans = SelectorUtilityNode([stealCraft, stealAlch, purchase, purchaseCraft])
 
 tree1 = attachTreeToAgent("Tom", plans)
 tree2 = attachTreeToAgent("Alchemist", actions)
