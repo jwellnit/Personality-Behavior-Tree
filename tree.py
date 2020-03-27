@@ -37,8 +37,10 @@ class Node:
 
     #print out identifying informaation
     def spec(self):
-        print("Base ID: " + str(self.baseId) + "\n")
-        print("Ref ID: " + str(self.refId) + "\n")
+        print("{")
+        print("Base ID: " + str(self.baseId))
+        print("Ref ID: " + str(self.refId))
+        print("}\n")
 
     #utility calc, base, never called
     def utility(self):
@@ -115,9 +117,9 @@ class ActionNode(Node):
     def referrence(self):
         refIdNew = blackboard["refIdCount"]
 
-        #creae entry for refid in blackboard
-        if not "refId::"+str(refIdNew) in blackboard:
-            blackboard["refId::"+str(refIdNew)] = {}
+        # #creae entry for refid in blackboard
+        # if not "refId::"+str(refIdNew) in blackboard:
+        #     blackboard["refId::"+str(refIdNew)] = {}
 
         blackboard["refIdCount"] += 1
         ref = ActionNode(self.preconditions, self.effects, baseId = self.baseId, refId = refIdNew, time = self.time, effectText = self.effectText, involvedChars = self.involvedChars, consentingChars = self.consentingChars)
@@ -127,6 +129,7 @@ class ActionNode(Node):
         #creae entry for refid in blackboard
         if not "refId::"+str(self.refId) in blackboard:
             blackboard["refId::"+str(self.refId)] = {}
+            blackboard["refId::"+str(self.refId)]["ticks"] = self.time
 
         if not "agent::"+str(getVariable("executingAgent")) in blackboard:
             blackboard["agent::"+str(getVariable("executingAgent"))] = {}
@@ -140,17 +143,22 @@ class ActionNode(Node):
         #increment attempts on node (used for utility)
         blackboard["agent::"+str(getVariable("executingAgent"))]["baseId::"+str(self.baseId)]["attempts"] += 1
 
-        print("Exectuting: " + str(self.refId))
+        #print("Exectuting: " + str(self.refId))
 
         #execute successfully if preconditions are met, fail if not
         if self.preconditions():
+            if blackboard["refId::"+str(self.refId)]["ticks"] > 0:
+                blackboard["refId::"+str(self.refId)]["ticks"] = blackboard["refId::"+str(self.refId)]["ticks"] - 1
+                return "RUNNING"
             print("SUCCESS")
             self.effects()
             blackboard["displayText"] += self.effectText
+            blackboard["refId::"+str(self.refId)]["ticks"] = self.time
             return "SUCCESS"
         else:
             print("Failure")
             blackboard["agent::"+str(getVariable("executingAgent"))]["baseId::"+str(self.baseId)]["failures"] += 1
+            blackboard["refId::"+str(self.refId)]["ticks"] = self.time
             return "FAILURE"
 
     #utility calc, based on formula
@@ -196,7 +204,7 @@ class ActionNode(Node):
             consentingChars.remove(str(getVariable("executingAgent")))
         involvedChars = self.involvedChars.copy()
         if "$executingAgent$" in involvedChars:
-            involved.remove("$executingAgent$")
+            involvedChars.remove("$executingAgent$")
         if str(getVariable("executingAgent")) in involvedChars:
             involvedChars.remove(str(getVariable("executingAgent")))
         #extraversion
@@ -242,6 +250,7 @@ class ActionNode(Node):
         #creae entry for refid in blackboard
         if not "refId::"+str(self.refId) in blackboard:
             blackboard["refId::"+str(self.refId)] = {}
+            blackboard["refId::"+str(self.refId)]["ticks"] = self.time
 
         if not "agent::"+str(getVariable("executingAgent")) in blackboard:
             blackboard["agent::"+str(getVariable("executingAgent"))] = {}
@@ -278,12 +287,16 @@ class CompositeNode(Node):
 
     #print info
     def spec(self):
-        print("Base ID: " + str(self.baseId) + "\n")
-        print("Ref ID: " + str(self.refId) + "\n")
+        print("{")
+        print("Base ID: " + str(self.baseId))
+        print("Ref ID: " + str(self.refId))
         print("Children: [")
         for c in self.children:
+            print(c.refId)
+        print("]")
+        print("}\n")
+        for c in self.children:
             c.spec()
-        print("]\n")
 
     #utility calc, base, never called
     def utility(self):
@@ -448,7 +461,7 @@ class SelectorNode(CompositeNode):
             length += c.lenPre()
         length /= len(self.children)
         blackboard["refId::"+str(self.refId)]["lenPre"] = length
-        print("LenPre: " + str(self.refId) + ", " + str(length))
+        #print("LenPre: " + str(self.refId) + ", " + str(length))
         return length
 
     #final length processing
@@ -457,7 +470,7 @@ class SelectorNode(CompositeNode):
         for c in self.children:
             c.lenPost(extra)
         blackboard["refId::"+str(self.refId)]["lenPost"] = length + extra
-        print("LenPost: " + str(self.refId) + ", " + str(length+extra))
+        #print("LenPost: " + str(self.refId) + ", " + str(length+extra))
         return length + extra
 
 #orders branches at execute based on utility
@@ -474,7 +487,7 @@ class SelectorUtilityNode(SelectorNode):
             #sort pairs
             pairs.sort(key = lambda pair: pair[0])
 
-            print(pairs)
+            #print(pairs)
 
         #make entry for refid
         if not "refId::"+str(self.refId) in blackboard:
@@ -525,7 +538,7 @@ class SequenceUtilityNode(SequenceNode):
             utilities = utilityProcess(self)
 
             #likelihood of failure of next child
-            n = persoanlity[str(getVariable(executingAgent))]["n"]
+            n = personality[str(getVariable("executingAgent"))]["n"]
             n = (n+1)/2
             u = utilities[blackboard["refId::"+str(self.refId)]["currentIndex"]]
             u = u/math.sqrt(5)
@@ -595,7 +608,7 @@ class GuardNode(CompositeNode):
         refIdNew = blackboard["refIdCount"]
         blackboard["refIdCount"] += 1
         childRef = self.child.referrence()
-        ref = CompositeNode(self.preconditions, childRef, baseId = self.baseId, refId = refIdNew)
+        ref = GuardNode(self.preconditions, childRef, baseId = self.baseId, refId = refIdNew)
         return ref
 
     #parent node type, should never execute
@@ -607,8 +620,8 @@ class GuardNode(CompositeNode):
 
     #print info
     def spec(self):
-        print("Base ID: " + str(self.baseId) + "\n")
-        print("Ref ID: " + str(self.refId) + "\n")
+        print("Base ID: " + str(self.baseId))
+        print("Ref ID: " + str(self.refId))
         print("Child: ")
         self.child.spec()
         print("\n")
@@ -629,9 +642,8 @@ class GuardNode(CompositeNode):
     #final length processing
     def lenPost(self, extra):
         length = blackboard["refId::"+str(self.refId)]["lenPre"]
-        for c in self.children:
-            childLen = length - blackboard["refId::"+str(c.refId)]["lenPre"]
-            c.lenPost(extra + childLen)
+        childLen = length - blackboard["refId::"+str(self.child.refId)]["lenPre"]
+        self.child.lenPost(extra + childLen)
         blackboard["refId::"+str(self.refId)]["lenPost"] = length + extra
         # print("LenPost: " + str(self.refId) + ", " + str(length+extra))
         return length + extra
@@ -660,6 +672,15 @@ class GuardNode(CompositeNode):
 
         self.child.initialize()
 
+    #print info
+    def spec(self):
+        print("{")
+        print("Base ID: " + str(self.baseId))
+        print("Ref ID: " + str(self.refId))
+        print("Child: " + str(self.child.refId))
+        print("}\n")
+        self.child.spec()
+
 #utility processing for sequences or selectors
 def utilityProcess(tree):
     utilities = []
@@ -681,7 +702,7 @@ def utilityProcess(tree):
 def setVariable(var, val):
     if var[0] == '$' and var[-1] == '$':
         var = getVariable(var[1:-1])
-    if val[0] == '$' and val[-1] == '$':
+    if type(val) == type("test") and val[0] == '$' and val[-1] == '$':
         val = getVariable(val[1:-1])
     blackboard["variable::"+var] = val
 
@@ -724,7 +745,7 @@ def attachTreeToAgent(agent, tree):
 def setAgentVariable(agent, var, val):
     if var[0] == '$' and var[-1] == '$':
         var = getVariable(var[1:-1])
-    if val[0] == '$' and val[-1] == '$':
+    if type(val) == type("test") and val[0] == '$' and val[-1] == '$':
         val = getVariable(val[1:-1])
     if agent[0] == '$' and agent[-1] == '$':
         agent = getVariable(agent[1:-1])
@@ -746,7 +767,7 @@ def turn():
         setVariable("executingAgent", t[0])
         blackboard["displayText"] = ""
         t[1].execute()
-        print("Effect Text: " + blackboard["displayText"])
+        print(t[0]+ "::Effect Text: " + blackboard["displayText"])
 
 
 #for later
