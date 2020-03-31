@@ -74,7 +74,7 @@ gatherHerbs = ActionNode(gatherHerbsPrecond,
                     effectText = "Gather herbs. ")
 
 def tellHerbsPrecond():
-    return getAgentVariable("$executingAgent$", "location") == getAgentVariable("Alchemist", "location") and not getVariable("playerSleep") and not getVariable("knowHerbs")
+    return getAgentVariable("$executingAgent$", "location") == getAgentVariable("Alchemist", "location") and not getVariable("sleep") and not getVariable("knowHerbs")
 
 def tellHerbsEffects():
     setVariable("knowHerbs", True)
@@ -84,7 +84,7 @@ tellHerbs = ActionNode(tellHerbsPrecond,
                     effectText = "Tell the Alchemist about the herbs. ")
 
 def giveHerbsPrecond():
-    return getAgentVariable("$executingAgent$", "location") == getAgentVariable("Alchemist", "location") and not getVariable("playerSleep") and getVariable("herbsLocation") == getVariable("executingAgent")
+    return getAgentVariable("$executingAgent$", "location") == getAgentVariable("Alchemist", "location") and not getVariable("sleep") and getVariable("herbsLocation") == getVariable("executingAgent")
 
 def giveHerbsEffects():
     setVariable("herbsLocation", "Alchemist")
