@@ -7,17 +7,7 @@ blackboard = {};
 blackboard["baseIdCount"] = 0;
 blackboard["refIdCount"] = 0;
 
-def waitPrecond():
-    return True
 
-def waitEffects():
-    return
-
-wait = ActionNode(waitPrecond,
-                    waitEffects,
-                    effectText = "Wait. ",
-                    involvedChars = ["$executingAgent$"],
-                    consentingChars = [])
 
 #node types
 #parent node, never used directly
@@ -161,8 +151,8 @@ class ActionNode(Node):
 
         #execute successfully if preconditions are met, fail if not
         if self.preconditions():
+            blackboard["refId::"+str(self.refId)]["ticks"] = blackboard["refId::"+str(self.refId)]["ticks"] - 1
             if blackboard["refId::"+str(self.refId)]["ticks"] > 0:
-                blackboard["refId::"+str(self.refId)]["ticks"] = blackboard["refId::"+str(self.refId)]["ticks"] - 1
                 return "RUNNING"
             print("SUCCESS")
             self.effects()
@@ -492,6 +482,22 @@ class SelectorNode(CompositeNode):
         #print("LenPost: " + str(self.refId) + ", " + str(length+extra))
         return length + extra
 
+
+def waitPrecond():
+    return True
+
+def waitEffects():
+    return
+
+wait = ActionNode(waitPrecond,
+                    waitEffects,
+                    effectText = "Wait. ",
+                    involvedChars = ["$executingAgent$"],
+                    consentingChars = [])
+
+
+
+
 #orders branches at execute based on utility
 class SelectorUtilityNode(SelectorNode):
     def execute(self):
@@ -506,6 +512,12 @@ class SelectorUtilityNode(SelectorNode):
 
             #sort pairs
             pairs.sort(key = lambda pair: pair[0])
+
+            sorted = []
+            for p in pairs:
+                sorted.append(p[1])
+
+            self.children = sorted
 
             #print(pairs)
 
@@ -591,7 +603,7 @@ class SequenceUtilityNode(SequenceNode):
             elif status == "RUNNING":
                 return "RUNNING"
             else:
-                #likelihood of failure of next child
+                #likelihood of retry
                 n = personality[str(getVariable("executingAgent"))]["n"]
                 n = (n+1)/2
                 c = personality[str(getVariable("executingAgent"))]["c"]
@@ -672,7 +684,9 @@ class GuardNode(CompositeNode):
 
     #utility calc, base, never called
     def utility(self):
-        utility = self.child.utility()
+        utility = 0
+        if self.preconditions():
+            utility = self.child.utility()
         blackboard["refId::"+str(self.refId)]["utility"] = utility
         return utility
 
@@ -724,6 +738,8 @@ class GuardNode(CompositeNode):
         print("Child: " + str(self.child.refId))
         print("}\n")
         self.child.spec()
+
+
 
 #utility processing for sequences or selectors
 def utilityProcess(tree):
