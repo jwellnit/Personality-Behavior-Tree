@@ -678,7 +678,7 @@ class GuardNode(CompositeNode):
 
     #utility calc, base, never called
     def utility(self, type):
-        if type == "SELECTOR"
+        if type == "SELECTOR":
             utility = 0
             if self.preconditions():
                 utility = self.child.utility("GUARD")
@@ -751,7 +751,7 @@ def utilityProcess(tree, type):
             setVariable("maxLength", leng)
         c.setActionCounts(c.getAtionCount())
     for c in tree.children:
-        utilities.append(c.utility())
+        utilities.append(c.utility(type))
     return utilities
 
 
