@@ -1,0 +1,37 @@
+Tom
+Tom collects the medicinal herbs from the cottage.
+Tom collects poisonous herbs from the cottage and makes poison.
+Tom goes to the town.
+Tom knocks on the door and the alchemist lets him into the shop.
+Tom breaks into the alchemists shop WITHOUT waking her up.
+Tom breaks into the alchemists shop WITHOUT waking her up to steal the recipe.
+Tom breaks into the alchemists shop WITHOUT waking her up to poison the alchemist.
+Tom changes his mind.
+Tom poisons the alchemists drink WITHOUT her noticing.
+Tom buys the recipe with a silver coin.
+Tom steals the recipe from the alchemist.
+Tom steals the recipe WITHOUT anyone noticing.
+Tom steals the recipe from the unconscious alchemist.
+Tom gives the herbs to the alchemist to make medicine.
+Tom tells the alchemist about the herbs in the cottage.
+Tom buys the herbs with a silver coin.
+Tom steals the herbs from the alchemist.
+Tom steals the herbs from the unconscious alchemist.
+Tom makes the medicine using the herbs.
+Tom buys the medicine with a silver coin.
+Tom steals the medicine from the alchemist.
+Tom steals the medicine from the unconscious alchemist.
+
+Alchemist
+Tom knocks on the door and the alchemist lets him into the shop.
+The alchemist leaves the shop to collect the herbs.
+The alchemist collects the herbs.
+The alchemist comes back to the shop.
+Unknowingly, the alchemist drinks the poison and faints.
+The alchemist makes the medicine using the herbs.
+The alchemist calls for the guard.
+
+Guard
+The guard arrests Tom.
+
+All Characters wait.

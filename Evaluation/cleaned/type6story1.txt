@@ -1,0 +1,11 @@
+Tom collects poisonous herbs from the cottage and makes poison.
+Tom collects the medicinal herbs from the cottage.
+Tom goes to the town.
+Tom knocks on the door and the alchemist lets him into the shop.
+Tom poisons the alchemists drink.
+The alchemist calls for the guard.
+Tom goes to the town.
+Tom knocks on the door and the alchemist lets him into the shop.
+Tom tells the alchemist about the herbs in the cottage.
+The alchemist leaves the shop to collect the herbs.
+The guard arrests Tom.

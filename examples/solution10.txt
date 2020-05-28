@@ -1,0 +1,8 @@
+Tom goes to the town.
+Tom knocks on the door and the alchemist lets him into the shop.
+Tom tells the alchemist about the herbs in the cottage.
+The alchemist leaves the shop to collect the herbs.
+The alchemist collects the herbs.
+The alchemist comes back to the shop.
+The alchemist makes the medicine using the herbs.
+Tom buys the medicine with a silver coin.

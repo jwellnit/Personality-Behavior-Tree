@@ -1,0 +1,53 @@
+plan 1
+Change Mind
+plan 2
+Tom::Effect Text: Gather poisonous herbs and make poison.
+Alchemist::Effect Text:
+Guard::Effect Text: Wait.
+continue? (y/n): y
+plan 3
+Tom::Effect Text: Gather herbs.
+Alchemist::Effect Text:
+Guard::Effect Text: Wait.
+continue? (y/n): y
+plan 8
+Tom::Effect Text: Gather poisonous herbs and make poison.
+Alchemist::Effect Text:
+Guard::Effect Text: Wait.
+continue? (y/n): y
+plan 1
+plan 4
+plan 11
+plan 3
+Tom::Effect Text: Move to the Town.
+Alchemist::Effect Text:
+Guard::Effect Text: Wait.
+continue? (y/n): y
+plan 6
+plan 1
+plan 4
+plan 11
+plan 3
+Tom is caught Breaking into the Alchemist's house.
+Tom::Effect Text: Wait.
+Alchemist::Effect Text:
+Guard::Effect Text: Wait.
+continue? (y/n): y
+plan 5
+plan 3
+Tom is caught Breaking into the Alchemist's house.
+plan 7
+Tom::Effect Text: Move to the Town.
+Alchemist::Effect Text:
+Guard::Effect Text: Wait.
+continue? (y/n): y
+plan 7
+Tom::Effect Text: Tom knocks on the Alchemist's door.
+Alchemist::Effect Text: Call the guards.
+Guard::Effect Text: Arrest Tom.
+continue? (y/n): y
+plan 7
+Tom::Effect Text:
+Alchemist::Effect Text: Game Over.
+Guard::Effect Text: Game Over.
+continue? (y/n):
