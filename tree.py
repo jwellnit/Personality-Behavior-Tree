@@ -45,7 +45,7 @@ class Node:
         print("}\n")
 
     #utility calc, base, never called
-    def utility(self):
+    def utility(self, type):
         utility = 0
         blackboard["refId::"+str(self.refId)]["utility"] = utility
         return utility
@@ -166,7 +166,7 @@ class ActionNode(Node):
             return "FAILURE"
 
     #utility calc, based on formula
-    def utility(self):
+    def utility(self, type):
         utility = 0
 
         #openness
@@ -304,7 +304,7 @@ class CompositeNode(Node):
             c.spec()
 
     #utility calc, base, never called
-    def utility(self):
+    def utility(self, type):
         utility = 0
         blackboard["refId::"+str(self.refId)]["utility"] = utility
         return utility
@@ -398,10 +398,10 @@ class SequenceNode(CompositeNode):
         return ref
 
     #utility calc, average of children
-    def utility(self):
+    def utility(self, type):
         utilities = []
         for c in self.children:
-            utilities.append(c.utility())
+            utilities.append(c.utility("SEQUENCE"))
         utility = 0
         for u in utilities:
             utility += u
@@ -450,10 +450,10 @@ class SelectorNode(CompositeNode):
         return ref
 
     #utility calc, max of children
-    def utility(self):
+    def utility(self, type):
         utilities = []
         for c in self.children:
-            utilities.append(c.utility())
+            utilities.append(c.utility("SELECTOR"))
         utility = -2
         for u in utilities:
             if u > utility:
@@ -503,7 +503,7 @@ class SelectorUtilityNode(SelectorNode):
         # print(str(self.refId))
         if getVariable("executingAgent") in personality:
             #get utilities
-            utilities = utilityProcess(self)
+            utilities = utilityProcess(self, "SELECTOR")
 
             pairs = []
             for i in range(len(utilities)):
@@ -569,7 +569,7 @@ class SequenceUtilityNode(SequenceNode):
 
         if getVariable("executingAgent") in personality:
             #get utilities
-            utilities = utilityProcess(self)
+            utilities = utilityProcess(self, "SEQUENCE")
 
             #likelihood of failure of next child
             n = personality[str(getVariable("executingAgent"))]["n"]
@@ -677,10 +677,13 @@ class GuardNode(CompositeNode):
         print("\n")
 
     #utility calc, base, never called
-    def utility(self):
-        utility = 0
-        if self.preconditions():
-            utility = self.child.utility()
+    def utility(self, type):
+        if type == "SELECTOR"
+            utility = 0
+            if self.preconditions():
+                utility = self.child.utility("GUARD")
+        else:
+            utility = self.child.utility("GUARD")
         blackboard["refId::"+str(self.refId)]["utility"] = utility
         return utility
 
@@ -736,7 +739,7 @@ class GuardNode(CompositeNode):
 
 
 #utility processing for sequences or selectors
-def utilityProcess(tree):
+def utilityProcess(tree, type):
     utilities = []
     setVariable("maxLength", 0)
     setVariable("maxAttempts", 0)
